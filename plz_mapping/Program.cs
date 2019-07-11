@@ -11,12 +11,20 @@ namespace plz_Mapping
 {
     class Program
     {
+        #region fields
         private static string database;
         static SQLiteConnection sqlCon;
         static SQLiteCommand plzcommand;
+
+        static SQLiteCommand getplzIDCommand;
+        static SQLiteDataReader zipIdReader;
         static SQLiteDataReader plzreader;
+
         static SQLiteCommand ortcommand;
+        static SQLiteCommand getOrtIDCommand;
+        static SQLiteDataReader ortIdReader;
         static SQLiteDataReader ortreader;
+
         static SQLiteCommand insertCommPLZ;
         static SQLiteCommand insertCommORT;
         static SQLiteCommand mappingComm;
@@ -24,18 +32,11 @@ namespace plz_Mapping
         static SQLiteCommand mappingInsert;
         static string PLZID;
         static string ORTID;
-
+        static long counter = 1;
+        #endregion
         static void Main(string[] args)
         {
-
-
-
             string[] rohdaten = File.ReadAllLines(Environment.CurrentDirectory + "\\plzDeutschland.csv", System.Text.Encoding.UTF8);
-            long i = 1;
-            long citynotFound = 1;
-            long zipNotfound = 1;
-            List<string> ListOfZipcodes = new List<string>();
-            List<string> ListOfCityNames = new List<string>();
 
             //database = @"D:\SourceCode\VisualStudio\Dogginator_Product\Dogginator\DoggiNator.db";
             sqlCon = new SQLiteConnection(@"Data Source =../../../../Dogginator_Product/Dogginator/DoggiNator.db; Version=3;New=True;");
@@ -62,72 +63,90 @@ namespace plz_Mapping
                    
 
 
-                    //plzcommand = new SQLiteCommand(sqlCon);
-                    //plzcommand.CommandText = "SELECT id FROM zipcode WHERE zip=\"" + plznew + "\";";
-                    //plzreader = plzcommand.ExecuteReader();
+                    plzcommand = new SQLiteCommand(sqlCon);
+                    plzcommand.CommandText = "SELECT id FROM zipcode WHERE zip=\"" + plznew + "\";";
+                    plzreader = plzcommand.ExecuteReader();
 
-                    //if (plzreader.HasRows)
-                    //{
-                    //    while (plzreader.Read())
-                    //    {
-                    //        //    Console.WriteLine(plzreader["id"] );
-                    //        idPLZ = plzreader[0].ToString();
-                    //        PLZID = idPLZ;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    insertCommPLZ = new SQLiteCommand(sqlCon);
-                    //    insertCommPLZ.CommandText = "INSERT INTO zipcode (id,zip) VALUES(NULL" + "," + "'" + plznew + "'" + ");";
-                    //    insertCommPLZ.ExecuteNonQuery();
-                    //    idPLZ = zipNotfound.ToString();
-                    //    PLZID = idPLZ;
-                    //    zipNotfound++;
-                    //}
+                    if (plzreader.HasRows)
+                    {
+                        while (plzreader.Read())
+                        {
+                            //    Console.WriteLine(plzreader["id"] );
+                            idPLZ = plzreader[0].ToString();
+                            PLZID = idPLZ;
+                        }
+                    }
+                    else
+                    {
+                        insertCommPLZ = new SQLiteCommand(sqlCon);
+                        insertCommPLZ.CommandText = "INSERT INTO zipcode (id,zip) VALUES(NULL" + "," + "'" + plznew + "'" + ");";
+                        insertCommPLZ.ExecuteNonQuery();
+                        getplzIDCommand = new SQLiteCommand(sqlCon);
+                        getplzIDCommand.CommandText = "Select id from zipcode WHERE zip=\"" + plznew + "\";";
+                        zipIdReader = getplzIDCommand.ExecuteReader();
+                        if (zipIdReader.HasRows)
+                        {
+                            while(zipIdReader.Read())
+                            {
+                                idPLZ = zipIdReader[0].ToString();
+                                PLZID = idPLZ;
+                            }
+                        }
+                    }
 
-                    //ortcommand = new SQLiteCommand(sqlCon);
-                    //ortcommand.CommandText = "SELECT id FROM city WHERE name=\"" + ortnew + "\";";
-                    //ortreader = ortcommand.ExecuteReader();
+                    ortcommand = new SQLiteCommand(sqlCon);
+                    ortcommand.CommandText = "SELECT id FROM city WHERE name=\"" + ortnew + "\";";
+                    ortreader = ortcommand.ExecuteReader();
 
-                    //if (ortreader.HasRows)
-                    //{
-                    //    while (ortreader.Read())
-                    //    {
-                    //        idORT = ortreader[0].ToString();
-                    //        ORTID = idORT;
-                    //    }
+                    if (ortreader.HasRows)
+                    {
+                        while (ortreader.Read())
+                        {
+                            idORT = ortreader[0].ToString();
+                            ORTID = idORT;
+                        }
 
-                    //}
-                    //else
-                    //{
+                    }
+                    else
+                    {
 
-                    //    insertCommORT = new SQLiteCommand(sqlCon);
-                    //    insertCommORT.CommandText = "INSERT INTO city (id,name) VALUES(NULL" + "," + "'" + ortnew + "'" + ");";
-                    //    insertCommORT.ExecuteNonQuery();
-                    //    idORT = citynotFound.ToString();
-                    //    ORTID = idORT;
-                    //    citynotFound++;
+                        insertCommORT = new SQLiteCommand(sqlCon);
+                        insertCommORT.CommandText = "INSERT INTO city (id,name) VALUES(NULL" + "," + "'" + ortnew + "'" + ");";
+                        insertCommORT.ExecuteNonQuery();
 
-                    //}
+                        getOrtIDCommand = new SQLiteCommand(sqlCon);
+                        getOrtIDCommand.CommandText = "Select id from city WHERE name=\"" + ortnew + "\";";
+
+                        ortIdReader = getOrtIDCommand.ExecuteReader();
+                        if (ortIdReader.HasRows)
+                        {
+                            while (ortIdReader.Read())
+                            {
+                                idORT = ortIdReader[0].ToString();
+                                ORTID = idORT;
+                            }
+                        }
+                    }
                     //wenn was zurück kommt dann war schon da. und die id ist uns schon bekann (aus dem gerade eben select)
                     //genauso select id auf ort where ort=  ortnew
                     //wenn was zurück kommt dann war schon da.
 
-                //    mappingComm = new SQLiteCommand(sqlCon);
-                //    mappingComm.CommandText = "SELECT id FROM ziptocity WHERE id_zip=\"" + PLZID + "\" AND id_city=\"" + ORTID + "\";";
-                //    mappingreader = mappingComm.ExecuteReader();
+                        mappingComm = new SQLiteCommand(sqlCon);
+                        mappingComm.CommandText = "SELECT id FROM ziptocity WHERE id_zip=\"" + PLZID + "\" AND id_city=\"" + ORTID + "\";";
+                        mappingreader = mappingComm.ExecuteReader();
 
-                //    if (mappingreader.HasRows == false)
-                //    {
+                        if (mappingreader.HasRows == false)
+                        {
 
-                //        mappingInsert = new SQLiteCommand(sqlCon);
-                //        mappingInsert.CommandText = "INSERT INTO ziptocity (id,id_city,id_zip) VALUES(NULL" + "," + "'" + ORTID + "'" + "," + "'" + PLZID + "'" + ");";
-                //        mappingInsert.ExecuteNonQuery();
-                //        Console.WriteLine("Datensatz " + i + " von Datensatz: " + rohdaten.Length + " in Datenbank geschrieben");
-                //    }
+                            mappingInsert = new SQLiteCommand(sqlCon);
+                            mappingInsert.CommandText = "INSERT INTO ziptocity (id,id_city,id_zip) VALUES(NULL" + "," + "'" + ORTID + "'" + "," + "'" + PLZID + "'" + ");";
+                            mappingInsert.ExecuteNonQuery();
+                            Console.WriteLine("Datensatz " + counter + " von Datensatz: " + rohdaten.Length + " in Datenbank geschrieben");
+                        }
                 }
-                i++;
-                Thread.Sleep(25);
+                counter++;
+
+                Thread.Sleep(50);
             }
         }
     }
